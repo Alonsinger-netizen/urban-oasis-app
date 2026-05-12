@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Oasis — Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            teal:   { 50:'#EDF3EE', 100:'#D6E8D8', 200:'#AECFB2', 300:'#84B48A', 400:'#6EA474', 500:'#5C8862', 600:'#4E7854', 700:'#3E6244', 800:'#314E37' },
+            sky:    { 50:'#EEF2F6', 100:'#DAE4EE', 200:'#B4CCDE', 300:'#88AFCA', 400:'#6694B2', 500:'#517C9C', 600:'#406888', 700:'#325472' },
+            amber:  { 50:'#F5F0E8', 100:'#EAE0C6', 200:'#D2BF90', 300:'#BC9E60', 400:'#A88440', 500:'#9A7030', 600:'#7E5C26', 700:'#664A1E', 800:'#513A18' },
+            red:    { 50:'#F4ECEB', 100:'#E9D5D3', 300:'#C09090', 400:'#A87070', 500:'#945858' },
+            violet: { 50:'#EEECF4', 100:'#DAD8EC', 500:'#786CA0', 600:'#685C90', 700:'#544C78' },
+            cyan:   { 50:'#EAF2F2', 100:'#D0E4E4', 400:'#589090', 600:'#3E7474', 700:'#306060' },
+            pink:   { 600:'#926080' },
+            indigo: { 600:'#6068A6' },
+            purple: { 600:'#6E5EA4' },
+            rose:   { 600:'#9E5060' },
+            emerald:{ 600:'#4C7852' },
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── Inventory-specific ── */
+    .inv-row {
+      display: grid; grid-template-columns: 200px 1fr 250px;
+      align-items: center; gap: 16px; padding: 10px 18px;
+      border-bottom: 1px solid #EDE9E3; transition: background .12s;
+    }
+    .inv-row:last-child { border-bottom: none; }
+    .inv-row:hover { background: #F5F1EB; }
+
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(20,16,8,.1);
+      background: #FDFCF9; color: #64748B; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; transition: all .15s; outline: none; padding: 0;
+    }
+    .qty-btn:hover:not(:disabled) { border-color: rgba(20,16,8,.18); color: #334155; background: #F5F2EC; }
+    .qty-btn:active:not(:disabled) { transform: scale(.9); }
+    .qty-btn:disabled { opacity: .28; cursor: not-allowed; }
+
+    .inv-bar      { height: 4px; background: #E8E4DC; border-radius: 99px; overflow: hidden; }
+    .inv-bar-fill { height: 100%; border-radius: 99px; transition: width .35s ease; }
+
+    .loan-hdr { display: grid; grid-template-columns: 160px 60px 1fr 72px 120px; gap: 12px; padding: 8px 18px; background: #F8F5F0; border-bottom: 1px solid rgba(20,16,8,.08); }
+    .loan-row { display: grid; grid-template-columns: 160px 60px 1fr 72px 120px; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid #EDE9E3; transition: background .12s; }
+    .loan-row:last-child { border-bottom: none; }
+    .loan-row:hover { background: #F5F1EB; }
+    .loan-row.returned { opacity: .5; }
+
+    .modal-input {
+      width: 100%; font-family: 'Inter', sans-serif; font-size: 13px; color: #334155;
+      background: #F5F2EC; border: 1px solid rgba(20,16,8,.1); border-radius: 10px;
+      padding: 9px 14px; outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    .modal-input:focus { border-color: #4E7854; box-shadow: 0 0 0 3px rgba(78,120,84,.1); }
+  </style>
+  <script>(function(){var c=localStorage.getItem('sb-collapsed')==='true';document.documentElement.style.setProperty('--sw',c?'68px':'240px');})();</script>
+</head>
+<body>
+<div class="hidden bg-violet-600 bg-sky-600 bg-amber-600 bg-teal-600 bg-teal-500 bg-amber-400 bg-red-400 bg-slate-400"></div>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ═══════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════ */
+const NAV = [
+  { label:'Dashboard',    icon:'layout-dashboard', page:'dashboard',  href:'index.html'            },
+  { label:'Rooms Map',    icon:'map',              page:'rooms',       href:'index.html?page=rooms' },
+  { label:'Staff Roster', icon:'users',            page:'staff',       href:'roster.html'           },
+  { label:'Inventory',    icon:'package',          page:'inventory',   href:null                    },
+  { label:'Settings',     icon:'settings',         page:'settings',    href:null                    },
+];
+
+const DEPT_CFG = {
+  'Front Desk':   { icon:'concierge-bell', avCls:'bg-violet-600', tc:'#5B21B6', bg:'#F5F3FF', bd:'#DDD6FE', sepBg:'#FAFAFF' },
+  'Housekeeping': { icon:'sparkles',       avCls:'bg-sky-600',    tc:'#0369A1', bg:'#F0F9FF', bd:'#BAE6FD', sepBg:'#F7FBFF' },
+  'Maintenance':  { icon:'wrench',         avCls:'bg-amber-600',  tc:'#92400E', bg:'#FFFBEB', bd:'#FDE68A', sepBg:'#FFFEF5' },
+};
+
+const STATUS_CFG = {
+  ok:  { label:'In Stock',     bg:'#F0FDF9', bd:'#6EE7B7', tc:'#065F46', dotCls:'bg-teal-500',  bar:'#0D9488' },
+  low: { label:'Low Stock',    bg:'#FFFBEB', bd:'#FDE68A', tc:'#92400E', dotCls:'bg-amber-400', bar:'#F59E0B' },
+  out: { label:'Out of Stock', bg:'#FFF5F5', bd:'#FECACA', tc:'#991B1B', dotCls:'bg-red-400',   bar:'#EF4444' },
+};
+
+const INVENTORY_SEED = {
+  'Front Desk': [
+    { id:'fd-1', name:'Key Cards',       icon:'credit-card',   qty:47, max:100, unit:'cards' },
+    { id:'fd-2', name:'Stationery Sets', icon:'pen-line',      qty:12, max:50,  unit:'sets'  },
+    { id:'fd-3', name:'Welcome Kits',    icon:'gift',          qty:23, max:60,  unit:'kits'  },
+    { id:'fd-4', name:'Luggage Tags',    icon:'tag',           qty:4,  max:80,  unit:'pcs'   },
+    { id:'fd-5', name:'Parking Permits', icon:'square-parking',qty:8,  max:30,  unit:'passes'},
+  ],
+  'Housekeeping': [
+    { id:'hk-1', name:'Shampoo',         icon:'droplets',      qty:84, max:200, unit:'btls'  },
+    { id:'hk-2', name:'Bath Towels',     icon:'layers',        qty:62, max:120, unit:'pcs'   },
+    { id:'hk-3', name:'Coffee Kits',     icon:'coffee',        qty:18, max:80,  unit:'kits'  },
+    { id:'hk-4', name:'Shower Caps',     icon:'circle-user',   qty:0,  max:100, unit:'pcs'   },
+    { id:'hk-5', name:'Hand Towels',     icon:'layers',        qty:15, max:120, unit:'pcs'   },
+  ],
+  'Maintenance': [
+    { id:'mt-1', name:'LED Bulbs',       icon:'lightbulb',     qty:18, max:50,  unit:'pcs'   },
+    { id:'mt-2', name:'AA Batteries',    icon:'battery',       qty:6,  max:60,  unit:'pcs'   },
+    { id:'mt-3', name:'Extension Cords', icon:'plug',          qty:0,  max:12,  unit:'pcs'   },
+    { id:'mt-4', name:'Door Lock Sets',  icon:'lock',          qty:7,  max:15,  unit:'units' },
+  ],
+};
+
+const LOAN_STOCK = [
+  { id:'ls-1', name:'USB-C Charger',    icon:'cable', total:8 },
+  { id:'ls-2', name:'Universal Adapter',icon:'globe', total:6 },
+  { id:'ls-3', name:'Iron & Board',     icon:'zap',   total:4 },
+  { id:'ls-4', name:'Hairdryer',        icon:'wind',  total:6 },
+];
+
+const INITIAL_LOANS = [
+  { id:'ln-1', item:'USB-C Charger',    room:'204', guest:'David Levi',    time:'09:30', returned:false },
+  { id:'ln-2', item:'Universal Adapter',room:'315', guest:'Sarah Cohen',   time:'11:00', returned:false },
+  { id:'ln-3', item:'Iron & Board',     room:'108', guest:'Mark Williams', time:'14:20', returned:false },
+  { id:'ln-4', item:'Hairdryer',        room:'209', guest:'Marco Rossi',   time:'16:00', returned:false },
+];
+
+const BOT_REPLIES = [
+  "Shower Caps and Extension Cords are out of stock — flag both for emergency procurement.",
+  "Housekeeping has 2 items below 25% threshold. Coffee Kits and Hand Towels need attention soon.",
+  "4 active guest loans today. Mark Williams (Rm 108) has had the Iron & Board since 14:20 — the longest active loan.",
+  "AA Batteries in Maintenance are at 10%. Consider bundling with Extension Cords in the next refill.",
+  "All active loans are within expected return windows. No overdue items detected.",
+];
+const SUGGESTIONS = ['What is out of stock?', 'Any overdue loans?', 'Show maintenance alerts'];
+
+function getStatus(qty, max) {
+  if (qty === 0) return 'out';
+  if (qty / max < 0.25) return 'low';
+  return 'ok';
+}
+function now() { return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+let _tid = 0;
+
+/* ═══════════════════════════════════════════════
+   PRIMITIVES
+═══════════════════════════════════════════════ */
+function Icon({ name, size=18, cls='' }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current || !window.lucide) return;
+    ref.current.innerHTML = '';
+    const key = name.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('');
+    if (lucide[key]) {
+      const svg = lucide.createElement(lucide[key]);
+      svg.setAttribute('width', size); svg.setAttribute('height', size); svg.setAttribute('stroke-width','1.8');
+      ref.current.appendChild(svg);
+    }
+  }, [name, size]);
+  return <span ref={ref} className={`inline-flex items-center justify-center shrink-0 ${cls}`} />;
+}
+
+function StatusBadge({ status }) {
+  const c = STATUS_CFG[status];
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap"
+      style={{background:c.bg, borderColor:c.bd, color:c.tc}}>
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dotCls} shrink-0`} />
+      {c.label}
+    </span>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+function ToastBar({ toasts, onDismiss }) {
+  return (
+    <div className="toast-wrap">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast-item toast-${t.type}`}>
+          <div className="toast-icon">
+            {t.type==='success' && <Icon name="check-circle" size={17} cls="text-teal-600" />}
+            {t.type==='warn'    && <Icon name="send"          size={17} cls="text-amber-500" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-slate-800">{t.title}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">{t.msg}</p>
+          </div>
+          <button onClick={() => onDismiss(t.id)} className="text-slate-300 hover:text-slate-500 shrink-0">
+            <Icon name="x" size={13} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   CHAT PANEL
+═══════════════════════════════════════════════ */
+function ChatPanel({ open, onClose }) {
+  const [messages, setMessages] = useState([
+    { from:'bot', text:"Hi! I'm your Hotel Co-pilot. Ask me about stock levels, loans, or procurement needs.", time:'09:00' },
+  ]);
+  const [input, setInput] = useState('');
+  const [typing, setTyping] = useState(false);
+  const endRef = useRef(null); const inputRef = useRef(null); const botIdx = useRef(0);
+
+  useEffect(() => { endRef.current?.scrollIntoView({behavior:'smooth'}); }, [messages, typing]);
+  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 320); }, [open]);
+
+  const send = useCallback((text) => {
+    const msg = (text||input).trim(); if (!msg) return;
+    setMessages(p=>[...p,{from:'user',text:msg,time:now()}]); setInput(''); setTyping(true);
+    setTimeout(() => {
+      setTyping(false);
+      setMessages(p=>[...p,{from:'bot',text:BOT_REPLIES[botIdx.current%BOT_REPLIES.length],time:now()}]);
+      botIdx.current++;
+    }, 1000+Math.random()*800);
+  }, [input]);
+
+  const onKey = e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} };
+
+  return (
+    <div className={`chat-panel ${open?'open':''}`}>
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
+          <Icon name="bot" size={17} cls="[&_svg]:stroke-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-slate-800">Co-pilot</p>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+            <span className="text-[10px] text-slate-400 font-medium">Online · AI-powered</span>
+          </div>
+        </div>
+        <button onClick={onClose} className="btn-outline w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+          <Icon name="x" size={14} cls="text-slate-400" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto sb px-4 py-4 space-y-4">
+        {messages.map((m,i) => (
+          <div key={i} className={`flex items-end gap-2.5 ${m.from==='user'?'flex-row-reverse':''}`}>
+            {m.from==='bot' && <div className="w-7 h-7 rounded-full bg-slate-900 flex items-center justify-center shrink-0 mb-0.5"><Icon name="bot" size={13} cls="[&_svg]:stroke-white" /></div>}
+            <div className={`max-w-[78%] flex flex-col gap-1 ${m.from==='user'?'items-end':'items-start'}`}>
+              <div className={`px-3.5 py-2.5 text-sm leading-relaxed ${m.from==='bot'?'bubble-bot text-slate-700':'bubble-user'}`}>{m.text}</div>
+              <span className="text-[10px] text-slate-400 px-1">{m.time}</span>
+            </div>
+          </div>
+        ))}
+        {typing && (
+          <div className="flex items-end gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-slate-900 flex items-center justify-center shrink-0"><Icon name="bot" size={13} cls="[&_svg]:stroke-white" /></div>
+            <div className="bubble-bot px-4 py-3 flex gap-1.5 items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dot1" /><span className="w-1.5 h-1.5 rounded-full bg-slate-400 dot2" /><span className="w-1.5 h-1.5 rounded-full bg-slate-400 dot3" />
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      {messages.length <= 1 && (
+        <div className="px-4 pb-3 flex flex-wrap gap-1.5 shrink-0">
+          {SUGGESTIONS.map((s,i) => (
+            <button key={i} onClick={() => send(s)} className="text-[11px] font-medium text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-1.5 rounded-lg hover:bg-teal-100 transition-colors">{s}</button>
+          ))}
+        </div>
+      )}
+      <div className="px-4 py-4 border-t border-slate-100 shrink-0">
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-100 transition-all">
+          <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={onKey}
+            placeholder="Ask me anything…" className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none" />
+          <button onClick={()=>send()} disabled={!input.trim()}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${input.trim()?'bg-slate-900':'bg-slate-200 cursor-not-allowed'}`}>
+            <Icon name="send-horizontal" size={14} cls={input.trim()?'[&_svg]:stroke-white':'text-slate-400'} />
+          </button>
+        </div>
+        <p className="text-[10px] text-slate-400 text-center mt-2">AI responses are illustrative placeholders.</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════ */
+function Topbar({ chatOpen, onToggleChat }) {
+  const dateStr = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  return (
+    <header className="topbar h-14 flex items-center px-6 gap-3 sticky top-0 z-20">
+      <p className="text-slate-400 text-xs hidden lg:block flex-1 shrink-0">{dateStr}</p>
+      <div className="flex-1 max-w-xs">
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><Icon name="search" size={14} /></span>
+          <input className="search-input w-full pl-8 pr-4 py-2 rounded-xl text-sm" placeholder="Search inventory…" readOnly />
+        </div>
+      </div>
+      <button className="relative btn-outline p-2 rounded-xl">
+        <Icon name="bell" size={16} cls="text-slate-500" />
+        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
+      </button>
+      <button onClick={onToggleChat}
+        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${chatOpen?'bg-slate-900 text-white':'btn-outline text-slate-700'}`}>
+        <Icon name="bot" size={15} cls={chatOpen?'[&_svg]:stroke-white':'text-slate-500'} />
+        <span>Co-pilot</span>
+        {!chatOpen && <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />}
+      </button>
+    </header>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+function Sidebar({ collapsed, onToggle }) {
+  return (
+    <aside className={`sidebar sidebar-wrap fixed left-0 top-0 h-screen flex flex-col z-30 overflow-hidden ${collapsed?'collapsed':''}`}>
+      {collapsed ? (
+        <div className="flex flex-col items-center py-4 border-b border-white/[.05] gap-3">
+          <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center shrink-0">
+            <Icon name="building-2" size={15} cls="[&_svg]:stroke-white" />
+          </div>
+          <button onClick={onToggle}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[.06] transition-colors"
+            title="Expand sidebar">
+            <Icon name="chevrons-right" size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 px-4 py-[18px] border-b border-white/[.05]">
+          <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center shrink-0">
+            <Icon name="building-2" size={15} cls="[&_svg]:stroke-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-semibold text-sm leading-tight tracking-tight">Urban Oasis</p>
+            <p className="text-slate-500 text-[11px]">Hotel Management</p>
+          </div>
+          <button onClick={onToggle}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-white hover:bg-white/[.06] transition-colors shrink-0"
+            title="Collapse sidebar">
+            <Icon name="chevrons-left" size={15} />
+          </button>
+        </div>
+      )}
+      <nav className="flex-1 px-2.5 py-4 space-y-0.5 overflow-y-auto sb sb-dark">
+        {!collapsed && <p className="text-slate-700 text-[9px] font-semibold uppercase tracking-widest px-2.5 mb-3">Main Menu</p>}
+        {NAV.map(item => {
+          const active = item.page === 'inventory';
+          return (
+            <div key={item.page} className="tip-wrap">
+              <button onClick={() => { if (item.href) window.location.href = item.href; }}
+                className={`nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+                  ${active ? 'nav-active' : 'text-slate-500 hover:text-slate-200'}`}>
+                <Icon name={item.icon} size={16} cls={active?'text-teal-500':''} />
+                <span className="sb-label">{item.label}</span>
+                {!collapsed && item.page!=='dashboard' && item.page!=='rooms' && item.page!=='staff' && item.page!=='inventory' && !active && (
+                  <span className="ml-auto text-[9px] font-semibold text-slate-700 sb-label tracking-wider">Soon</span>
+                )}
+              </button>
+              {collapsed && <span className="tip">{item.label}</span>}
+            </div>
+          );
+        })}
+      </nav>
+      <div className="px-3 py-3.5 border-t border-white/[.05] flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-teal-700 flex items-center justify-center text-white text-xs font-bold shrink-0">GM</div>
+        <div className="sb-extra flex-1 min-w-0">
+          <p className="text-white text-[12px] font-medium truncate">General Manager</p>
+          <p className="text-slate-600 text-[10px] truncate">alonsinger102@gmail.com</p>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   NEW LOAN MODAL
+═══════════════════════════════════════════════ */
+function NewLoanModal({ onSave, onClose }) {
+  const [item,  setItem]  = useState('');
+  const [room,  setRoom]  = useState('');
+  const [guest, setGuest] = useState('');
+  const canSave = item && room.trim() && guest.trim();
+
+  return (
+    <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center p-4" onClick={e => e.target===e.currentTarget && onClose()}>
+      <div className="modal-box w-full max-w-sm anim-pop">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center">
+              <Icon name="hand-heart" size={16} cls="[&_svg]:stroke-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Lend Item</p>
+              <p className="text-[11px] text-slate-400">Log an item lent to a guest</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="btn-outline w-8 h-8 rounded-lg flex items-center justify-center">
+            <Icon name="x" size={14} cls="text-slate-400" />
+          </button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Item</label>
+            <div className="relative">
+              <select className="modal-input pr-8 cursor-pointer" style={{appearance:'none'}} value={item} onChange={e=>setItem(e.target.value)}>
+                <option value="">Select item…</option>
+                {LOAN_STOCK.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="chevron-down" size={14} /></span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Room #</label>
+              <input className="modal-input" placeholder="e.g. 204" value={room} onChange={e=>setRoom(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Guest Name</label>
+              <input className="modal-input" placeholder="Full name" value={guest} onChange={e=>setGuest(e.target.value)} />
+            </div>
+          </div>
+        </div>
+        <div className="px-6 pb-5 flex gap-3 justify-end">
+          <button onClick={onClose} className="btn-outline px-5 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
+          <button onClick={() => canSave && onSave({item, room:room.trim(), guest:guest.trim()})}
+            disabled={!canSave}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium ${canSave?'btn-teal':'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+            <Icon name="plus" size={14} cls={canSave?'[&_svg]:stroke-white':'text-slate-400'} />
+            Log Loan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   INVENTORY PAGE
+═══════════════════════════════════════════════ */
+const DEPT_TABS = ['All', 'Front Desk', 'Housekeeping', 'Maintenance', 'Guest Loans'];
+
+function InventoryPage() {
+  const [tab,       setTab]       = useState('All');
+  const [items,     setItems]     = useState(() => {
+    const m = {};
+    Object.values(INVENTORY_SEED).flat().forEach(i => { m[i.id] = {...i}; });
+    return m;
+  });
+  const [loans,     setLoans]     = useState(INITIAL_LOANS);
+  const [loanModal, setLoanModal] = useState(false);
+  const [toasts,    setToasts]    = useState([]);
+
+  const pushToast = (type, title, msg) => {
+    const id = ++_tid;
+    setToasts(p => [...p, {id,type,title,msg}]);
+    setTimeout(() => setToasts(p => p.filter(t => t.id!==id)), 5000);
+  };
+  const dismissToast = id => setToasts(p => p.filter(t => t.id!==id));
+
+  const adjustQty = (id, delta) => {
+    setItems(prev => {
+      const item = prev[id];
+      const next = Math.max(0, Math.min(item.max, item.qty + delta));
+      const wasOk  = getStatus(item.qty, item.max) === 'ok';
+      const nowOut = next === 0;
+      const nowLow = !nowOut && next / item.max < 0.25;
+      if (wasOk && nowLow) pushToast('warn',    'Low Stock',     `${item.name} is running low (${next} left).`);
+      if (wasOk && nowOut) pushToast('warn',    'Out of Stock',  `${item.name} is now out of stock.`);
+      return { ...prev, [id]: { ...item, qty: next } };
+    });
+  };
+
+  const markReturned = loanId => {
+    const loan = loans.find(l => l.id===loanId);
+    setLoans(prev => prev.map(l => l.id===loanId ? {...l, returned:true} : l));
+    pushToast('success', 'Item Returned', `${loan?.item} returned by ${loan?.guest?.split(' ')[0]} (Rm ${loan?.room})`);
+  };
+
+  const addLoan = ({item, room, guest}) => {
+    const id = `ln-${Date.now()}`;
+    setLoans(prev => [...prev, {id, item, room, guest, time:now(), returned:false}]);
+    setLoanModal(false);
+    pushToast('success', 'Loan Logged', `${item} issued to ${guest.split(' ')[0]} (Rm ${room})`);
+  };
+
+  const flatItems   = Object.values(items);
+  const lowCount    = flatItems.filter(i => getStatus(i.qty,i.max)==='low').length;
+  const outCount    = flatItems.filter(i => i.qty===0).length;
+  const activeLoans = loans.filter(l => !l.returned).length;
+
+  const loanAvail = name => {
+    const stock = LOAN_STOCK.find(s => s.name===name);
+    const out   = loans.filter(l => l.item===name && !l.returned).length;
+    return { total:stock?.total||0, out, available:(stock?.total||0)-out };
+  };
+
+  const depts = tab==='All' ? ['Front Desk','Housekeeping','Maintenance']
+              : tab==='Guest Loans' ? [] : [tab];
+
+  return (
+    <div className="p-6">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
+            <Icon name="package" size={16} cls="[&_svg]:stroke-white" />
+          </div>
+          <div>
+            <h1 className="text-[17px] font-bold text-slate-800 leading-tight tracking-tight">Operational Inventory</h1>
+            <p className="text-xs text-slate-400 mt-0.5">Real-time stock · Shift manager view</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Summary strip ── */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        {[
+          { label:'Items Tracked', value:flatItems.length, icon:'package',        cls:'text-slate-600' },
+          { label:'Low Stock',     value:lowCount,         icon:'alert-triangle', cls:'text-amber-500' },
+          { label:'Out of Stock',  value:outCount,         icon:'x-circle',       cls:'text-red-500'   },
+          { label:'Active Loans',  value:activeLoans,      icon:'hand-heart',     cls:'text-teal-600'  },
+        ].map((s,i) => (
+          <div key={i} className="card stat-card p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+              <Icon name={s.icon} size={18} cls={s.cls} />
+            </div>
+            <div>
+              <p className="text-[22px] font-bold text-slate-800 leading-none tabular-nums" style={{letterSpacing:'-.03em'}}>{s.value}</p>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5">{s.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="flex items-center gap-1 p-1 bg-white border border-slate-100 rounded-xl w-fit mb-6 shadow-sm">
+        {DEPT_TABS.map(d => (
+          <button key={d} onClick={() => setTab(d)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all
+              ${tab===d ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}>
+            {d}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Dept sections ── */}
+      {depts.map(deptName => {
+        const cfg       = DEPT_CFG[deptName];
+        const deptItems = Object.values(INVENTORY_SEED[deptName]).map(i => items[i.id]||i);
+        const alerts    = deptItems.filter(i => getStatus(i.qty,i.max)!=='ok').length;
+        return (
+          <div key={deptName} className="card mb-5">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50" style={{background:cfg.sepBg}}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl ${cfg.avCls} flex items-center justify-center shrink-0`}>
+                  <Icon name={cfg.icon} size={16} cls="[&_svg]:stroke-white" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-700">{deptName}</p>
+                  <p className="text-[11px] text-slate-400">{deptItems.length} items
+                    {alerts > 0 && <span className="ml-1.5 text-amber-500 font-semibold">· {alerts} alert{alerts!==1?'s':''}</span>}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => pushToast('warn', 'Refill Requested', `Procurement alert sent for ${deptName}.`)}
+                className="btn-outline flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-medium">
+                <Icon name="send" size={13} cls="text-slate-400" />
+                Request Refill
+              </button>
+            </div>
+
+            {deptItems.map(item => {
+              const status = getStatus(item.qty, item.max);
+              const sCfg   = STATUS_CFG[status];
+              const pct    = Math.round((item.qty / item.max) * 100);
+              return (
+                <div key={item.id} className="inv-row">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`w-8 h-8 rounded-lg ${cfg.avCls} flex items-center justify-center shrink-0`}>
+                      <Icon name={item.icon} size={14} cls="[&_svg]:stroke-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-slate-700 truncate">{item.name}</p>
+                      <p className="text-[10px] text-slate-400">{item.qty} / {item.max} {item.unit}</p>
+                    </div>
+                  </div>
+                  <div className="inv-bar">
+                    <div className="inv-bar-fill" style={{width:`${pct}%`, background:sCfg.bar}} />
+                  </div>
+                  <div className="flex items-center justify-end gap-2.5">
+                    <StatusBadge status={status} />
+                    <div className="flex items-center gap-1.5 ml-2">
+                      <button className="qty-btn" onClick={() => adjustQty(item.id,-1)} disabled={item.qty===0}>
+                        <Icon name="minus" size={11} />
+                      </button>
+                      <span className="text-[14px] font-bold text-slate-800 w-8 text-center tabular-nums">{item.qty}</span>
+                      <button className="qty-btn" onClick={() => adjustQty(item.id,+1)} disabled={item.qty===item.max}>
+                        <Icon name="plus" size={11} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+
+      {/* ── Guest Loans ── */}
+      {(tab==='All' || tab==='Guest Loans') && (
+        <div className="card">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50" style={{background:'#F0FDF9'}}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center shrink-0">
+                <Icon name="hand-heart" size={16} cls="[&_svg]:stroke-white" />
+              </div>
+              <div>
+                <p className="text-[13px] font-semibold text-slate-700">Guest Loans</p>
+                <p className="text-[11px] text-slate-400">{activeLoans} active · {loans.filter(l=>l.returned).length} returned today</p>
+              </div>
+            </div>
+            <button onClick={() => setLoanModal(true)}
+              className="btn-dark flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-medium">
+              <Icon name="plus" size={13} cls="[&_svg]:stroke-white" />
+              Lend Item
+            </button>
+          </div>
+
+          {/* Availability grid */}
+          <div className="px-5 py-4 border-b border-slate-50">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Item Availability</p>
+            <div className="grid grid-cols-4 gap-3">
+              {LOAN_STOCK.map(s => {
+                const { total, out, available } = loanAvail(s.name);
+                const allOut = available === 0;
+                return (
+                  <div key={s.id} className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-100 bg-slate-50">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${allOut?'bg-red-100':'bg-teal-50'}`}>
+                      <Icon name={s.icon} size={14} cls={allOut?'text-red-400':'text-teal-600'} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-slate-700 truncate">{s.name}</p>
+                      <p className={`text-[10px] font-medium ${allOut?'text-red-500':'text-slate-400'}`}>{available}/{total} available</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Loans table */}
+          <div className="loan-hdr">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Item</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Room</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Guest</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Since</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Action</p>
+          </div>
+          {loans.map(loan => (
+            <div key={loan.id} className={`loan-row ${loan.returned?'returned':''}`}>
+              <div className="flex items-center gap-2 min-w-0">
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${loan.returned?'bg-slate-100':'bg-teal-50'}`}>
+                  <Icon name={LOAN_STOCK.find(s=>s.name===loan.item)?.icon||'package'} size={12} cls={loan.returned?'text-slate-400':'text-teal-600'} />
+                </div>
+                <p className="text-[12px] font-medium text-slate-700 truncate">{loan.item}</p>
+              </div>
+              <p className="text-[12px] font-semibold text-slate-700">Rm {loan.room}</p>
+              <p className="text-[12px] text-slate-600 truncate">{loan.guest}</p>
+              <p className="text-[11px] text-slate-400 tabular-nums">{loan.time}</p>
+              <div>
+                {loan.returned ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-100 text-[11px] font-semibold text-teal-700">
+                    <Icon name="check" size={11} cls="text-teal-500" /> Returned
+                  </span>
+                ) : (
+                  <button onClick={() => markReturned(loan.id)}
+                    className="btn-teal flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold">
+                    <Icon name="check" size={11} cls="[&_svg]:stroke-white" />
+                    Mark Returned
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {loanModal && <NewLoanModal onSave={addLoan} onClose={() => setLoanModal(false)} />}
+      <ToastBar toasts={toasts} onDismiss={dismissToast} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   APP
+═══════════════════════════════════════════════ */
+function App() {
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sb-collapsed') === 'true');
+  const [chatOpen,  setChatOpen]  = useState(false);
+
+  const handleToggle = () => setCollapsed(c => { const next = !c; localStorage.setItem('sb-collapsed', String(next)); return next; });
+
+  useEffect(() => { document.documentElement.style.setProperty('--sw', collapsed?'68px':'240px'); }, [collapsed]);
+  useEffect(() => { document.documentElement.style.setProperty('--cw', chatOpen?'360px':'0px'); }, [chatOpen]);
+
+  return (
+    <div className="min-h-screen">
+      <Sidebar collapsed={collapsed} onToggle={handleToggle} />
+      <div className="main-content flex flex-col min-h-screen">
+        <Topbar chatOpen={chatOpen} onToggleChat={() => setChatOpen(c=>!c)} />
+        <main className="flex-1 anim-fade"><InventoryPage /></main>
+      </div>
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Oasis — Reservations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            teal:   { 50:'#EDF3EE', 100:'#D6E8D8', 200:'#AECFB2', 300:'#84B48A', 400:'#6EA474', 500:'#5C8862', 600:'#4E7854', 700:'#3E6244', 800:'#314E37' },
+            sky:    { 50:'#EEF2F6', 100:'#DAE4EE', 200:'#B4CCDE', 300:'#88AFCA', 400:'#6694B2', 500:'#517C9C', 600:'#406888', 700:'#325472' },
+            amber:  { 50:'#F5F0E8', 100:'#EAE0C6', 200:'#D2BF90', 300:'#BC9E60', 400:'#A88440', 500:'#9A7030', 600:'#7E5C26', 700:'#664A1E', 800:'#513A18' },
+            red:    { 50:'#F4ECEB', 100:'#E9D5D3', 300:'#C09090', 400:'#A87070', 500:'#945858' },
+            violet: { 50:'#EEECF4', 100:'#DAD8EC', 500:'#786CA0', 600:'#685C90', 700:'#544C78' },
+            cyan:   { 50:'#EAF2F2', 100:'#D0E4E4', 400:'#589090', 600:'#3E7474', 700:'#306060' },
+            pink:   { 600:'#926080' },
+            indigo: { 600:'#6068A6' },
+            purple: { 600:'#6E5EA4' },
+            rose:   { 600:'#9E5060' },
+            emerald:{ 600:'#4C7852' },
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #EDE9E3; min-height: 100vh; margin: 0; }
+    :root { --sw: 240px; --tr: .32s cubic-bezier(.4,0,.2,1); }
+    .sidebar { width: var(--sw); transition: width var(--tr); background: linear-gradient(160deg, #161B14 0%, #1B2018 100%); position: fixed; height: 100vh; color: white; z-index: 50; }
+    .main-content { margin-left: var(--sw); transition: margin-left var(--tr); }
+    .collapsed { --sw: 80px; }
+    .card { background: #FDFCF9; border: 1px solid rgba(20,16,8,.07); border-radius: 18px; box-shadow: 0 1px 2px rgba(20,16,8,.04), 0 4px 16px rgba(20,16,8,.06), inset 0 1px 0 rgba(255,255,255,.75); overflow: hidden; }
+    .nav-btn { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; color: #94A3B8; transition: all 0.2s; border-radius: 8px; margin: 4px 8px; width: calc(100% - 16px); }
+    .nav-active { background: rgba(78,120,84,.14); color: #78B07E; }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    th { background: #F8F5F0; padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: #94A3B8; border-bottom: 2px solid rgba(20,16,8,.08); }
+    td { padding: 16px; border-bottom: 1px solid #EDE9E3; font-size: 13px; }
+    .chat-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 360px; background: #FDFCF9; border-left: 1px solid rgba(20,16,8,.07); transform: translateX(100%); transition: transform var(--tr); z-index: 100; }
+    .chat-panel.open { transform: translateX(0); box-shadow: -10px 0 40px rgba(20,16,8,.1); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const RESERVATIONS_DATA = [
+      { id:'RES-0841', guest:'David Levi', checkIn:'May 5, 2026', nights:3, room:'204', roomType:'Deluxe', status:'checked-in', total:1260 },
+      { id:'RES-0842', guest:'Sarah Cohen', checkIn:'May 5, 2026', nights:2, room:'315', roomType:'Suite', status:'checked-in', total:3200 },
+      { id:'RES-0843', guest:'Mark Williams', checkIn:'May 5, 2026', nights:5, room:'108', roomType:'Standard', status:'confirmed', total:2100 }
+    ];
+
+    function Icon({ name, size=18, cls="" }) {
+      const ref = useRef(null);
+      useEffect(() => {
+        if (window.lucide && ref.current) {
+          ref.current.innerHTML = '';
+          const iconNode = lucide.createElement(lucide[name.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('')]);
+          iconNode.setAttribute('width', size);
+          iconNode.setAttribute('height', size);
+          ref.current.appendChild(iconNode);
+        }
+      }, [name]);
+      return <span ref={ref} className={cls} />;
+    }
+
+    function App() {
+      const [collapsed, setCollapsed] = useState(false);
+      const [chatOpen, setChatOpen] = useState(false);
+
+      return (
+        <div className={`flex ${collapsed ? 'collapsed' : ''}`}>
+          <aside className="sidebar">
+            <div className="p-6 flex items-center gap-3">
+              <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center"><Icon name="building-2" cls="text-white"/></div>
+              {!collapsed && <span className="font-bold text-lg text-white">Urban Oasis</span>}
+            </div>
+            <nav className="mt-4">
+              <a href="index.html" className="nav-btn"><Icon name="layout-dashboard"/> {!collapsed && "Dashboard"}</a>
+              <a href="#" className="nav-btn nav-active"><Icon name="calendar-check"/> {!collapsed && "Reservations"}</a>
+              <a href="inventory.html" className="nav-btn"><Icon name="package"/> {!collapsed && "Inventory"}</a>
+            </nav>
+          </aside>
+
+          <main className="main-content flex-1 p-8">
+            <header className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800">Reservations</h1>
+                <p className="text-slate-500 text-sm">Real-time guest management</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setChatOpen(!chatOpen)} className="bg-white border p-2 rounded-lg"><Icon name="bot" /></button>
+                <button className="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium">+ New Booking</button>
+              </div>
+            </header>
+
+            <div className="card">
+              <div className="tbl-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Guest</th>
+                      <th>Dates</th>
+                      <th>Room</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {RESERVATIONS_DATA.map(res => (
+                      <tr key={res.id}>
+                        <td className="font-mono text-slate-400">{res.id}</td>
+                        <td className="font-semibold">{res.guest}</td>
+                        <td>{res.checkIn} ({res.nights} n)</td>
+                        <td>{res.room} <span className="text-[10px] bg-slate-100 px-1 rounded">{res.roomType}</span></td>
+                        <td><span className={`px-2 py-1 rounded-full text-[10px] font-bold ${res.status === 'checked-in' ? 'bg-teal-50 text-teal-600 border border-teal-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`}>{res.status}</span></td>
+                        <td className="font-bold text-slate-700">₪{res.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+
+          <div className={`chat-panel ${chatOpen ? 'open' : ''}`}>
+            <div className="p-4 border-b flex justify-between items-center">
+              <span className="font-bold">Co-pilot AI</span>
+              <button onClick={() => setChatOpen(false)}><Icon name="x" /></button>
+            </div>
+            <div className="p-4 text-sm text-slate-500 italic">How can I help you manage your guests today?</div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
