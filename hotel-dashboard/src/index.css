@@ -264,3 +264,24 @@ body {
 .modal-strip-dark  { background: linear-gradient(160deg, #6B7F96 0%, #475569 100%); border-radius: 20px 20px 0 0; }
 .modal-strip-light { background: #FDFCF9; border-radius: 20px 20px 0 0; border-bottom: 1px solid rgba(20,16,8,.06); }
 .legend-dot { width: 12px; height: 12px; border-radius: 4px; border: 1px solid rgba(20,16,8,.08); flex-shrink: 0; }
+
+/* Inventory-specific */
+.inv-row {
+  display: grid; grid-template-columns: 200px 1fr 250px;
+  align-items: center; gap: 16px; padding: 10px 18px;
+  border-bottom: 1px solid #EDE9E3; transition: background .12s;
+}
+.inv-row:last-child { border-bottom: none; }
+.inv-row:hover { background: #F5F1EB; }
+
+.qty-btn {
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(20,16,8,.1);
+  background: #FDFCF9; color: #64748B; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; transition: all .15s; outline: none; padding: 0;
+}
+.qty-btn:hover:not(:disabled) { border-color: rgba(20,16,8,.18); color: #334155; background: #F5F2EC; }
+.qty-btn:active:not(:disabled) { transform: scale(.9); }
+.qty-btn:disabled { opacity: .28; cursor: not-allowed; }
+
+.inv-bar      { height: 4px; background: #E8E4DC; border-radius: 99px; overflow: hidden; }
+.inv-bar-fill { height: 100%; border-radius: 99px; transition: width .35s ease; }

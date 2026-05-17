@@ -32,9 +32,147 @@ const CHECKINS = [
     requests:['Late check-in','Business desk setup','Extra hangers'] },
 ];
 
+
+/* ═══════════════════════════════════════════════
+   INVENTORY & STAFF PAGES
+═══════════════════════════════════════════════ */
+const INVENTORY_SEED = {
+  'Front Desk': [
+    { id:'fd-1', name:'Key Cards',       icon:'credit-card',   qty:47, max:100, unit:'cards' },
+    { id:'fd-2', name:'Stationery Sets', icon:'pen-line',      qty:12, max:50,  unit:'sets'  },
+    { id:'fd-3', name:'Welcome Kits',    icon:'gift',          qty:23, max:60,  unit:'kits'  },
+    { id:'fd-4', name:'Luggage Tags',    icon:'tag',           qty:4,  max:80,  unit:'pcs'   },
+    { id:'fd-5', name:'Parking Permits', icon:'square-parking',qty:8,  max:30,  unit:'passes'},
+  ],
+  'Housekeeping': [
+    { id:'hk-1', name:'Shampoo',         icon:'droplets',      qty:84, max:200, unit:'btls'  },
+    { id:'hk-2', name:'Bath Towels',     icon:'layers',        qty:62, max:120, unit:'pcs'   },
+    { id:'hk-3', name:'Coffee Kits',     icon:'coffee',        qty:18, max:80,  unit:'kits'  },
+    { id:'hk-4', name:'Shower Caps',     icon:'circle-user',   qty:0,  max:100, unit:'pcs'   },
+    { id:'hk-5', name:'Hand Towels',     icon:'layers',        qty:15, max:120, unit:'pcs'   },
+  ],
+  'Maintenance': [
+    { id:'mt-1', name:'LED Bulbs',       icon:'lightbulb',     qty:18, max:50,  unit:'pcs'   },
+    { id:'mt-2', name:'AA Batteries',    icon:'battery',       qty:6,  max:60,  unit:'pcs'   },
+    { id:'mt-3', name:'Extension Cords', icon:'plug',          qty:0,  max:12,  unit:'pcs'   },
+    { id:'mt-4', name:'Door Lock Sets',  icon:'lock',          qty:7,  max:15,  unit:'units' },
+  ],
+};
+
+function getInvStatus(qty, max) {
+  if (qty === 0) return 'out';
+  if (qty / max < 0.25) return 'low';
+  return 'ok';
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    ok:  { label:'In Stock',     bg:'#EDF3EE', bd:'#AECFB2', tc:'#314E37' },
+    low: { label:'Low Stock',    bg:'#F5F0E8', bd:'#D2BF90', tc:'#664A1E' },
+    out: { label:'Out of Stock', bg:'#F4ECEB', bd:'#C09090', tc:'#7A3030' },
+  };
+  const c = map[status] || map.ok;
+  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{background:c.bg,border:`1px solid ${c.bd}`,color:c.tc}}>{c.label}</span>;
+}
+
+function InventoryPage() {
+  const [items, setItems] = useState(() => {
+    const m = {};
+    Object.values(INVENTORY_SEED).flat().forEach(i => { m[i.id] = {...i}; });
+    return m;
+  });
+
+  const depts = Object.keys(INVENTORY_SEED);
+
+  const adjust = (id, delta) => setItems(prev => ({...prev, [id]: {...prev[id], qty: Math.max(0, prev[id].qty + delta)}}));
+
+  return (
+    <div className="p-7">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-[17px] font-bold text-slate-800">Operational Inventory</h1>
+          <p className="text-xs text-slate-400 mt-0.5">Track stock levels and quick restock actions</p>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        {depts.map(dept => {
+          const deptItems = Object.values(INVENTORY_SEED[dept]).map(i => items[i.id] || i);
+          return (
+            <div key={dept} className="card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-700">{dept}</h3>
+                <div className="text-sm text-slate-400">{deptItems.length} items</div>
+              </div>
+              <div className="space-y-3">
+                {deptItems.map(it => {
+                  const pct = Math.round((it.qty / it.max) * 100);
+                  const status = getInvStatus(it.qty, it.max);
+                  return (
+                    <div key={it.id} className="inv-row">
+                      <div className="flex items-center gap-3">
+                        <Icon name={it.icon} size={18} cls="text-slate-500" />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">{it.name}</div>
+                          <div className="text-xs text-slate-400">{it.qty} / {it.max} {it.unit}</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="inv-bar"><div className="inv-bar-fill" style={{width:`${pct}%`,background: status==='ok'?'#4E7854':status==='low'?'#A88440':'#A87070'}} /></div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={status} />
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => adjust(it.id, -1)} className="qty-btn">-</button>
+                          <button onClick={() => adjust(it.id, +1)} className="qty-btn">+</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function StaffPage() {
+  const groups = Object.entries(STAFF);
+  return (
+    <div className="p-7">
+      <PageHeader icon="users" title="Staff Roster" sub="Team directory and shifts" />
+      <div className="space-y-6">
+        {groups.map(([dept, members]) => (
+          <div key={dept} className="card p-4">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3">{dept}</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {members.map(m => (
+                <div key={m.name} className="p-3 rounded-lg bg-[#F5F2EC] border border-[rgba(20,16,8,.06)] flex items-center gap-3">
+                  <Av ini={ini(m.name)} color={avColor(m.name)} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-800">{m.name}</div>
+                    <div className="text-xs text-slate-500">{m.role} · {m.shift}</div>
+                  </div>
+                  <div className="text-xs text-slate-400">{m.status}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   DASHBOARD & PAGES
+═══════════════════════════════════════════════ */
 const CHECKOUTS = [
-  { id:1, guest:'Rachel Green', room:'210', floor:2, time:'10:00', paid:true,  nights:2, type:'Deluxe',   amount:840,  total:'₪ 840',  inv:'INV-2026-0841',
-    phone:'+972 52 345 6789', email:'rachel.g@mail.com',      nat:'🇮🇱 Israeli',
+  { id:1, guest:'Rachel Green', room:'210', floor:2, time:'10:00', paid:true, nights:2, type:'Deluxe', amount:840, total:'₪ 840', inv:'INV-2026-0841',
+    phone:'+972 52 345 6789', email:'rachel.g@mail.com', nat:'🇮🇱 Israeli',
     checkIn:'May 3, 2026', checkOut:'May 5, 2026', loyalty:'Silver', requests:['Late checkout approved'],
     extras:[{label:'Minibar',amount:45},{label:'Room Service',amount:120}] },
   { id:2, guest:'James Park',   room:'118', floor:1, time:'11:00', paid:false, nights:3, type:'Standard', amount:560,  total:'₪ 560',  inv:'INV-2026-0842',
@@ -1296,7 +1434,7 @@ const PAGE_ICONS = { rooms:'map', reservations:'calendar-check', staff:'users', 
 function App() {
   const [page,      setPage]      = useState(() => {
     const p = new URLSearchParams(window.location.search).get('page');
-    return ['dashboard','rooms'].includes(p) ? p : 'dashboard';
+    return ['dashboard','rooms','staff','inventory'].includes(p) ? p : 'dashboard';
   });
   const [modal,     setModal]     = useState(null);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sb-collapsed') === 'true');
@@ -1322,6 +1460,10 @@ function App() {
             ? <Dashboard onModal={setModal} />
             : page==='rooms'
             ? <RoomsPage />
+            : page==='staff'
+            ? <StaffPage />
+            : page==='inventory'
+            ? <InventoryPage />
             : <Placeholder title={NAV.find(n=>n.page===page)?.label||page} icon={PAGE_ICONS[page]||'layers'} />
           }
         </main>
