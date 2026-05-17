@@ -11,7 +11,7 @@ const OCC = { occupied:29, available:9, maintenance:2, checkIns:5, checkOuts:3 }
 
 const CHECKINS = [
   { id:1, guest:'David Levi',    room:'204', floor:2, time:'14:00', nights:3, type:'Deluxe',   status:'confirmed',
-    phone:'+972 50 123 4567', email:'david.levi@gmail.com',       nat:'🇮🇱 Israeli',
+    phone:'+972 50 123 4567', email:'david.biton@gmail.com',       nat:'🇮🇱 Israeli',
     checkIn:'May 5, 2026', checkOut:'May 8, 2026',  total:'₪ 1,260', loyalty:'Gold',
     requests:['Extra pillows','No smoking room','High floor preferred'] },
   { id:2, guest:'Sarah Cohen',   room:'315', floor:3, time:'15:30', nights:2, type:'Suite',    status:'vip',
