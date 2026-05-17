@@ -67,12 +67,12 @@
 
     /* ── Modal select ── */
     .modal-select {
-      width: 100%; font-family: 'Inter', sans-serif; font-size: 13px; color: #334155;
+      width: 100%; font-size: 13px; color: #334155;
       background: #F5F2EC; border: 1px solid rgba(20,16,8,.1); border-radius: 10px;
       padding: 9px 14px; outline: none; cursor: pointer;
       transition: border-color .15s, box-shadow .15s; -webkit-appearance: none;
     }
-    .modal-select:focus { border-color: #4E7854; box-shadow: 0 0 0 3px rgba(78,120,84,.1); }
+    .modal-select:focus { border-color: #4E7854; box-shadow: 0 0 0 3px rgba(78,120,84,.09); }
   </style>
   <script>(function(){var c=localStorage.getItem('sb-collapsed')==='true';document.documentElement.style.setProperty('--sw',c?'68px':'240px');})();</script>
 </head>
@@ -91,7 +91,6 @@ const NAV = [
   { label:'Rooms Map',    icon:'map',               page:'rooms',        href:'index.html?page=rooms' },
   { label:'Staff Roster', icon:'users',             page:'staff',        href:null                    },
   { label:'Inventory',    icon:'package',           page:'inventory',    href:'inventory.html'        },
-  { label:'Settings',     icon:'settings',          page:'settings',     href:null                    },
 ];
 
 const WEEK_DAYS = [

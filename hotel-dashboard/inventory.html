@@ -4,15 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Urban Oasis — Inventory</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
           colors: {
             teal:   { 50:'#EDF3EE', 100:'#D6E8D8', 200:'#AECFB2', 300:'#84B48A', 400:'#6EA474', 500:'#5C8862', 600:'#4E7854', 700:'#3E6244', 800:'#314E37' },
             sky:    { 50:'#EEF2F6', 100:'#DAE4EE', 200:'#B4CCDE', 300:'#88AFCA', 400:'#6694B2', 500:'#517C9C', 600:'#406888', 700:'#325472' },
@@ -65,11 +61,11 @@
     .loan-row.returned { opacity: .5; }
 
     .modal-input {
-      width: 100%; font-family: 'Inter', sans-serif; font-size: 13px; color: #334155;
+      width: 100%; font-size: 13px; color: #334155;
       background: #F5F2EC; border: 1px solid rgba(20,16,8,.1); border-radius: 10px;
       padding: 9px 14px; outline: none; transition: border-color .15s, box-shadow .15s;
     }
-    .modal-input:focus { border-color: #4E7854; box-shadow: 0 0 0 3px rgba(78,120,84,.1); }
+    .modal-input:focus { border-color: #4E7854; box-shadow: 0 0 0 3px rgba(78,120,84,.09); }
   </style>
   <script>(function(){var c=localStorage.getItem('sb-collapsed')==='true';document.documentElement.style.setProperty('--sw',c?'68px':'240px');})();</script>
 </head>
@@ -88,19 +84,18 @@ const NAV = [
   { label:'Rooms Map',    icon:'map',              page:'rooms',       href:'index.html?page=rooms' },
   { label:'Staff Roster', icon:'users',            page:'staff',       href:'roster.html'           },
   { label:'Inventory',    icon:'package',          page:'inventory',   href:null                    },
-  { label:'Settings',     icon:'settings',         page:'settings',    href:null                    },
 ];
 
 const DEPT_CFG = {
-  'Front Desk':   { icon:'concierge-bell', avCls:'bg-violet-600', tc:'#5B21B6', bg:'#F5F3FF', bd:'#DDD6FE', sepBg:'#FAFAFF' },
-  'Housekeeping': { icon:'sparkles',       avCls:'bg-sky-600',    tc:'#0369A1', bg:'#F0F9FF', bd:'#BAE6FD', sepBg:'#F7FBFF' },
-  'Maintenance':  { icon:'wrench',         avCls:'bg-amber-600',  tc:'#92400E', bg:'#FFFBEB', bd:'#FDE68A', sepBg:'#FFFEF5' },
+  'Front Desk':   { icon:'concierge-bell', avCls:'bg-violet-600', tc:'#5B21B6', bg:'#F5F3FF', bd:'#DDD6FE', sepBg:'#F8F5F0' },
+  'Housekeeping': { icon:'sparkles',       avCls:'bg-sky-600',    tc:'#0369A1', bg:'#F0F9FF', bd:'#BAE6FD', sepBg:'#F8F5F0' },
+  'Maintenance':  { icon:'wrench',         avCls:'bg-amber-600',  tc:'#92400E', bg:'#FFFBEB', bd:'#FDE68A', sepBg:'#F8F5F0' },
 };
 
 const STATUS_CFG = {
-  ok:  { label:'In Stock',     bg:'#F0FDF9', bd:'#6EE7B7', tc:'#065F46', dotCls:'bg-teal-500',  bar:'#0D9488' },
-  low: { label:'Low Stock',    bg:'#FFFBEB', bd:'#FDE68A', tc:'#92400E', dotCls:'bg-amber-400', bar:'#F59E0B' },
-  out: { label:'Out of Stock', bg:'#FFF5F5', bd:'#FECACA', tc:'#991B1B', dotCls:'bg-red-400',   bar:'#EF4444' },
+  ok:  { label:'In Stock',     bg:'#EDF3EE', bd:'#AECFB2', tc:'#314E37', dotCls:'bg-teal-500',  bar:'#4E7854' },
+  low: { label:'Low Stock',    bg:'#F5F0E8', bd:'#D2BF90', tc:'#664A1E', dotCls:'bg-amber-400', bar:'#A88440' },
+  out: { label:'Out of Stock', bg:'#F4ECEB', bd:'#C09090', tc:'#7A3030', dotCls:'bg-red-400',   bar:'#A87070' },
 };
 
 const INVENTORY_SEED = {
@@ -625,7 +620,7 @@ function InventoryPage() {
       {/* ── Guest Loans ── */}
       {(tab==='All' || tab==='Guest Loans') && (
         <div className="card">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50" style={{background:'#F0FDF9'}}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50" style={{background:'#F8F5F0'}}>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center shrink-0">
                 <Icon name="hand-heart" size={16} cls="[&_svg]:stroke-white" />

@@ -57,10 +57,10 @@
     .dash-grid > * { min-width: 0; }
     .pill-on  {
       background: #1B2018; color: #fff; border-radius: 20px;
-      box-shadow: 0 1px 4px rgba(20,16,8,.25), inset 0 1px 0 rgba(255,255,255,.06);
+      box-shadow: 0 1px 2px rgba(20,16,8,.22), 0 1px 5px rgba(20,16,8,.12), inset 0 1px 0 rgba(255,255,255,.08);
     }
-    .pill-off { color: #94A3B8; border-radius: 20px; transition: color .14s, background .14s; }
-    .pill-off:hover { color: #475569; background: rgba(20,16,8,.05); }
+    .pill-off { color: #8EA099; border-radius: 20px; transition: color .14s, background .14s; }
+    .pill-off:hover { color: #49504A; background: rgba(20,16,8,.05); }
     .pri-urgent   { border-left: 3px solid #A87070; background: rgba(168,112,112,.015); }
     .pri-medium   { border-left: 3px solid #A88440; }
     .pri-normal   { border-left: 3px solid #CEC8BE; }
@@ -205,7 +205,6 @@ const NAV = [
   { label:'Rooms Map',    icon:'map',               page:'rooms'                          },
   { label:'Staff Roster', icon:'users',             page:'staff', href:'roster.html'      },
   { label:'Inventory',    icon:'package',            page:'inventory', href:'inventory.html' },
-  { label:'Settings',     icon:'settings',          page:'settings'                       },
 ];
 
 const SEARCH_POOL = [
@@ -365,7 +364,6 @@ function RoomCard({ room, onClick }) {
         </p>
       )}
       <div className="flex items-center gap-1 mt-1.5">
-        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} shrink-0`}></span>
         <span className={`text-[8px] font-semibold uppercase tracking-wide ${isDark ? 'text-slate-300' : 'text-slate-400'}`}>{cfg.label}</span>
       </div>
     </div>
@@ -409,7 +407,7 @@ function MHead({ title, sub, onClose }) {
 function InfoPair({ label, value, icon }) {
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
-      <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{background:'#F2EFE9',border:'1px solid rgba(20,16,8,.07)'}}>
         <Icon name={icon} size={13} cls="text-slate-400" />
       </div>
       <div className="flex-1 min-w-0">
@@ -428,7 +426,7 @@ function GuestModal({ data, onClose }) {
       <MHead title="Guest Profile" sub={isOut ? `Invoice ${data.inv}` : `Arriving at ${data.time}`} onClose={onClose} />
       <div className="px-6 pb-6 space-y-5 pt-5">
         {/* Hero */}
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+        <div className="flex items-center gap-4 p-4 rounded-xl" style={{background:'#F5F2EC',border:'1px solid rgba(20,16,8,.07)'}}>
           <Av ini={ini(data.guest)} color={color} size="lg" />
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-semibold text-slate-800">{data.guest}</h3>
@@ -468,7 +466,7 @@ function GuestModal({ data, onClose }) {
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Special Requests</p>
             <div className="space-y-1.5">
               {data.requests.map((r,i) => (
-                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[#F5F2EC] border border-[rgba(20,16,8,.07)]">
                   <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0"></span>
                   <p className="text-sm text-slate-600">{r}</p>
                 </div>
@@ -498,7 +496,7 @@ function RoomModal({ data, onClose }) {
       <MHead title={`Room ${data.room}`} sub={`Floor ${data.floor} · ${data.type}`} onClose={onClose} />
       <div className="px-6 pb-6 space-y-5 pt-5">
         {/* Issue */}
-        <div className={`px-4 py-3 rounded-xl border-l-4 bg-slate-50 border border-slate-100 flex items-start gap-3
+        <div className={`px-4 py-3 rounded-xl border-l-4 bg-[#F5F2EC] border border-[rgba(20,16,8,.07)] flex items-start gap-3
           ${pri==='urgent'?'border-l-red-500':pri==='medium'?'border-l-amber-400':'border-l-slate-300'}`}>
           <Icon name={pri==='urgent'?'alert-triangle':'info'} size={17} cls={`mt-0.5 shrink-0 ${pri==='urgent'?'text-red-500':pri==='medium'?'text-amber-500':'text-slate-400'}`} />
           <div>
@@ -510,7 +508,7 @@ function RoomModal({ data, onClose }) {
         {/* Guest */}
         <div>
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Current Guest</p>
-          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#F5F2EC] border border-[rgba(20,16,8,.07)]">
             <Av ini={ini(data.guest)} color={avColor(data.guest)} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-700">{data.guest}</p>
@@ -525,7 +523,7 @@ function RoomModal({ data, onClose }) {
         {/* Notes */}
         <div>
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Staff Notes</p>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+          <div className="p-3.5 rounded-xl bg-[#F5F2EC] border border-[rgba(20,16,8,.07)]">
             <p className="text-sm text-slate-600 leading-relaxed">{data.notes}</p>
           </div>
         </div>
@@ -876,7 +874,7 @@ function OccupancyCard() {
       <div className="flex items-center gap-5">
         <div className="relative shrink-0">
           <svg width="114" height="114" viewBox="0 0 114 114">
-            <circle cx="57" cy="57" r={r} fill="none" stroke="#F1F5F9" strokeWidth="11"/>
+            <circle cx="57" cy="57" r={r} fill="none" stroke="#EDE9E3" strokeWidth="11"/>
             <circle cx="57" cy="57" r={r} fill="none"
               stroke="#0D9488" strokeWidth="11" strokeLinecap="round"
               strokeDasharray={circ} strokeDashoffset={circ-(pct/100)*circ}
@@ -895,7 +893,7 @@ function OccupancyCard() {
               <span className="text-[13px] font-semibold text-slate-700 shrink-0" style={{fontVariantNumeric:'tabular-nums'}}>{v}</span>
             </div>
           ))}
-          <div className="pt-2 border-t border-slate-100 flex justify-between text-xs">
+          <div className="pt-2 border-t flex justify-between text-xs" style={{borderColor:'#EAE6DF'}}>
             <span className="text-slate-400">Revenue today</span>
             <span className="font-semibold text-teal-600">₪ 18,450</span>
           </div>
@@ -909,12 +907,13 @@ function OccupancyCard() {
 function CheckInsCard({ onOpen }) {
   const [arrivedIds, setArrivedIds] = useState(new Set());
   const markArrived = (id, e) => { e.stopPropagation(); setArrivedIds(s => new Set([...s, id])); };
+  const shown = CHECKINS.filter(c => !arrivedIds.has(c.id));
   return (
     <div className="card flex flex-col overflow-hidden">
       <div className="px-5 pt-5 pb-4 border-b border-slate-50 flex items-center justify-between">
         <div>
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Today's Check-ins</p>
-          <p className="text-[22px] font-bold text-slate-800 mt-0.5 leading-tight" style={{letterSpacing:'-.03em'}}>{CHECKINS.length} <span className="text-sm font-normal text-slate-400" style={{letterSpacing:'normal'}}>rooms</span></p>
+          <p className="text-[22px] font-bold text-slate-800 mt-0.5 leading-tight" style={{letterSpacing:'-.03em'}}>{shown.length} <span className="text-sm font-normal text-slate-400" style={{letterSpacing:'normal'}}>rooms</span></p>
         </div>
         <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
           <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-500">
@@ -923,23 +922,22 @@ function CheckInsCard({ onOpen }) {
         </div>
       </div>
       <div className="overflow-y-auto sb max-h-60 divide-y divide-slate-100">
-        {CHECKINS.map(c => (
+        {shown.map(c => (
           <div key={c.id} className="row flex items-center gap-3 px-5 py-3 cursor-pointer" onClick={()=>onOpen({type:'guest',data:c})}>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-700 truncate">{c.guest}</p>
               <p className="text-xs text-slate-400">Rm {c.room} · {c.type} · {c.nights}n · {c.time}</p>
             </div>
-            {arrivedIds.has(c.id)
-              ? <span className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600">
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1,6 4,9 11,2"/></svg>
-                  Check-in
-                </span>
-              : <button className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-600 text-white hover:bg-slate-700 transition-colors" onClick={e=>markArrived(c.id,e)}>
-                  Check-in
-                </button>
-            }
+            <button className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-600 text-white hover:bg-slate-700 transition-colors" onClick={e=>markArrived(c.id,e)}>
+              Check-in
+            </button>
           </div>
         ))}
+        {shown.length === 0 && (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-xs text-slate-400">All guests checked in</p>
+          </div>
+        )}
       </div>
       <div className="px-5 py-3 border-t border-slate-50">
         <button className="text-xs text-teal-600 font-semibold hover:text-teal-700 flex items-center gap-1 transition-colors">
@@ -997,7 +995,7 @@ function CheckOutsCard({ onOpen }) {
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1,6 4,9 11,2"/></svg>
                   Check-out
                 </span>
-              : <button className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-600 text-white hover:bg-slate-700 transition-colors" onClick={e=>markDeparted(c.id,e)}>
+              : <button className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold btn-dark" onClick={e=>markDeparted(c.id,e)}>
                   Check-out
                 </button>
             }
@@ -1015,9 +1013,23 @@ function CheckOutsCard({ onOpen }) {
 
 /* ── Room Status ────────────────────────────── */
 function RoomStatusCard({ onOpen }) {
-  const [filter, setFilter] = useState('all');
-  const [pris, setPris] = useState(() => Object.fromEntries(ROOMS.map(r=>[r.room, r.priority])));
-  const shown = filter==='all' ? ROOMS : ROOMS.filter(r=>pris[r.room]===filter);
+  const [filter,   setFilter]   = useState('all');
+  const [requests, setRequests] = useState(ROOMS);
+  const [pris,     setPris]     = useState(() => Object.fromEntries(ROOMS.map(r=>[r.room, r.priority])));
+  const [showAdd,  setShowAdd]  = useState(false);
+  const [newRoom,  setNewRoom]  = useState('');
+  const [newIssue, setNewIssue] = useState('');
+  const [newPri,   setNewPri]   = useState('normal');
+
+  const shown = filter==='all' ? requests : requests.filter(r=>pris[r.room]===filter);
+
+  const handleAdd = () => {
+    if (!newRoom.trim() || !newIssue.trim()) return;
+    const req = { room:newRoom.trim(), floor:0, type:'', issue:newIssue.trim(), priority:newPri, time:'just now', guest:'', phone:'', email:'', checkOut:'', notes:'' };
+    setRequests(r => [req, ...r]);
+    setPris(p => ({...p, [newRoom.trim()]: newPri}));
+    setNewRoom(''); setNewIssue(''); setNewPri('normal'); setShowAdd(false);
+  };
 
   return (
     <div className="card flex flex-col overflow-hidden">
@@ -1025,7 +1037,7 @@ function RoomStatusCard({ onOpen }) {
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Room Requests & Issues</p>
-            <p className="text-[22px] font-bold text-slate-800 mt-0.5 leading-tight" style={{letterSpacing:'-.03em'}}>{ROOMS.length} <span className="text-sm font-normal text-slate-400" style={{letterSpacing:'normal'}}>active</span></p>
+            <p className="text-[22px] font-bold text-slate-800 mt-0.5 leading-tight" style={{letterSpacing:'-.03em'}}>{requests.length} <span className="text-sm font-normal text-slate-400" style={{letterSpacing:'normal'}}>active</span></p>
           </div>
           <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
             <Icon name="alert-circle" size={17} cls="text-red-400" />
@@ -1068,13 +1080,39 @@ function RoomStatusCard({ onOpen }) {
         ))}
       </div>
 
+      {showAdd && (
+        <div className="px-5 py-3 border-t border-slate-100 flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input value={newRoom} onChange={e=>setNewRoom(e.target.value)} placeholder="Room"
+              className="w-16 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-colors" />
+            <input value={newIssue} onChange={e=>setNewIssue(e.target.value)} placeholder="Describe the request…"
+              className="flex-1 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-colors"
+              onKeyDown={e=>{if(e.key==='Enter') handleAdd();}} />
+          </div>
+          <div className="flex items-center gap-2">
+            <select value={newPri} onChange={e=>setNewPri(e.target.value)} className="ls flex-1">
+              <option value="normal">Normal</option>
+              <option value="medium">Medium</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <button onClick={handleAdd}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${newRoom.trim()&&newIssue.trim()?'btn-dark':'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+              Submit
+            </button>
+            <button onClick={()=>{setShowAdd(false);setNewRoom('');setNewIssue('');setNewPri('normal');}}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold btn-outline text-slate-500">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <div className="px-5 py-3 border-t border-slate-50 flex items-center justify-between">
         <div className="flex gap-3 text-[10px] text-slate-400">
-          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block"></span>1 urgent</span>
-          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>1 medium</span>
+          <span>{Object.values(pris).filter(p=>p==='urgent').length} urgent</span>
+          <span>{Object.values(pris).filter(p=>p==='medium').length} medium</span>
         </div>
-        <button className="text-xs text-slate-500 font-semibold hover:text-slate-700 flex items-center gap-1 transition-colors">
-          Assign staff <Icon name="chevron-right" size={13} cls="text-slate-400" />
+        <button onClick={()=>setShowAdd(v=>!v)} className="text-xs text-slate-500 font-semibold hover:text-slate-700 flex items-center gap-1 transition-colors">
+          Submit Request <Icon name="plus" size={13} cls="text-slate-400" />
         </button>
       </div>
     </div>
@@ -1184,7 +1222,7 @@ function RoomMapModal({ room, onClose, onToggle }) {
         {/* Body */}
         <div className="px-6 pb-6 pt-5 space-y-4">
           {room.guest ? (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-[#F5F2EC] border border-[rgba(20,16,8,.07)]">
               <Av ini={ini(room.guest)} color={avColor(room.guest)} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-800">{room.guest}</p>
@@ -1197,8 +1235,8 @@ function RoomMapModal({ room, onClose, onToggle }) {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-[#F5F2EC] border border-[rgba(20,16,8,.07)]">
+              <div className="w-10 h-10 rounded-xl bg-[#EEF3EE] flex items-center justify-center shrink-0">
                 <Icon name="circle-check" size={17} cls="text-emerald-400" />
               </div>
               <div>
@@ -1255,12 +1293,12 @@ function NewBookingModal({ availableRooms, onClose, onConfirm }) {
           ) : (<>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Guest Name</label>
-              <input className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-colors"
+              <input className="search-input w-full px-3 py-2.5 rounded-xl text-sm"
                 placeholder="Full name" value={guest} onChange={e => setGuest(e.target.value)} />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Room</label>
-              <select className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 focus:outline-none focus:border-slate-400 transition-colors"
+              <select className="search-input w-full px-3 py-2.5 rounded-xl text-sm"
                 value={room} onChange={e => setRoom(e.target.value)}>
                 {availableRooms.map(r => (
                   <option key={r.room} value={r.room}>Room {r.room} · {r.type} · Floor {r.floor}</option>
@@ -1270,12 +1308,12 @@ function NewBookingModal({ availableRooms, onClose, onConfirm }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Check-in</label>
-                <input type="date" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 focus:outline-none focus:border-slate-400 transition-colors"
+                <input type="date" className="search-input w-full px-3 py-2.5 rounded-xl text-sm"
                   value={checkIn} onChange={e => setCheckIn(e.target.value)} />
               </div>
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Check-out</label>
-                <input type="date" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 focus:outline-none focus:border-slate-400 transition-colors"
+                <input type="date" className="search-input w-full px-3 py-2.5 rounded-xl text-sm"
                   value={checkOut} onChange={e => setCheckOut(e.target.value)} />
               </div>
             </div>
@@ -1319,7 +1357,7 @@ function RoomsPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-7">
       <PageHeader icon="map" title="Rooms Map" sub={`${TOTAL_ROOMS} rooms · 4 floors · Live status`}>
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <div key={key} className="flex items-center gap-1.5">
@@ -1406,6 +1444,7 @@ function RoomsPage() {
         onToggle={() => {
           const next = statuses[sel.room] === 'occupied' ? 'available' : 'occupied';
           setStatuses(s => ({...s, [sel.room]: next}));
+          if (next === 'available') setGuestData(g => { const n = {...g}; delete n[sel.room]; return n; });
           setSel(null);
         }}
       />}
@@ -1425,7 +1464,7 @@ function PageHeader({ icon, title, sub, children }) {
   return (
     <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
       <div className="flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center shrink-0">
           <Icon name={icon} size={16} cls="[&_svg]:stroke-white" />
         </div>
         <div>
@@ -1440,9 +1479,9 @@ function PageHeader({ icon, title, sub, children }) {
 
 function Dashboard({ onModal }) {
   return (
-    <div className="p-6">
+    <div className="p-7">
       <PageHeader icon="layout-dashboard" title="Dashboard" sub="Live operations overview" />
-      <div className="grid grid-cols-12 gap-5 dash-grid">
+      <div className="grid grid-cols-12 gap-6 dash-grid">
         <div className="col-span-4 min-w-0"><OccupancyCard /></div>
         <div className="col-span-4 min-w-0"><CheckInsCard  onOpen={onModal} /></div>
         <div className="col-span-4 min-w-0"><CheckOutsCard onOpen={onModal} /></div>
